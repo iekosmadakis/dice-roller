@@ -1,0 +1,15 @@
+{
+  "name": "rolling-dice",
+  "version": "1.0.0",
+  "description": "A 3D dice rolling application",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "start": "serve .",
+    "build": "serve -s ."
+  },
+  "dependencies": {
+    "serve": ">=14.2.4"
+  }
+} 
