@@ -111,12 +111,12 @@ const DiceRoller = () => {
       sceneRef.current.add(topLight);
       
       // Add front light
-      const frontLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      const frontLight = new THREE.DirectionalLight(0xffffff, 1.0);
       frontLight.position.set(0, 5, 10);
       sceneRef.current.add(frontLight);
 
       // Add side light
-      const sideLight = new THREE.DirectionalLight(0xffffff, 0.6);
+      const sideLight = new THREE.DirectionalLight(0xffffff, 0.8);
       sideLight.position.set(10, 5, 0);
       sceneRef.current.add(sideLight);
 
