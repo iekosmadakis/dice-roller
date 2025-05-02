@@ -97,10 +97,10 @@ const DiceRoller = () => {
 
       updateSceneSize();
 
-      const ambientLight = new THREE.AmbientLight(0xffffff, .7);
+      const ambientLight = new THREE.AmbientLight(0xffffff, .5);
       sceneRef.current.add(ambientLight);
       
-      const topLight = new THREE.PointLight(0xffffff, .8);
+      const topLight = new THREE.PointLight(0xffffff, .5);
       topLight.position.set(10, 15, 0);
       topLight.castShadow = true;
       topLight.shadow.mapSize.width = 2048;
@@ -108,12 +108,6 @@ const DiceRoller = () => {
       topLight.shadow.camera.near = 5;
       topLight.shadow.camera.far = 400;
       sceneRef.current.add(topLight);
-      
-      // Add another light from the front
-      const frontLight = new THREE.DirectionalLight(0xffffff, 0.5);
-      frontLight.position.set(0, 3, 10);
-      frontLight.castShadow = true;
-      sceneRef.current.add(frontLight);
       
       createFloor();
       diceMeshRef.current = createDiceMesh();
@@ -147,17 +141,15 @@ const DiceRoller = () => {
     };
 
     const createDiceMesh = () => {
-      // Bright white color for the dice
-      const boxMaterialOuter = new THREE.MeshStandardMaterial({ 
-        color: 0xffffff,
-        roughness: 0.2,
-        metalness: 0.1
+      // Match exactly the original color and material properties
+      const boxMaterialOuter = new THREE.MeshStandardMaterial({
+        color: 0xeeeeee
       });
       
       const boxMaterialInner = new THREE.MeshStandardMaterial({
         color: 0x000000,
         roughness: 0,
-        metalness: 0.7,
+        metalness: 1,
         side: THREE.DoubleSide
       });
 
