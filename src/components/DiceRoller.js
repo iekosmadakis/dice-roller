@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as CANNON from 'cannon-es';
 import * as THREE from 'three';
 import { createBoxGeometry, createInnerGeometry } from '../utils/diceGeometry';
@@ -13,6 +13,10 @@ const DiceRoller = () => {
     return localStorage.getItem('theme') === 'dark' || prefersDarkScheme.matches;
   });
   const [rollHistory, setRollHistory] = useState([]);
+  
+  // Create refs for persistent values across renders
+  const worldRef = useRef(null);
+  const diceArrayRef = useRef([]);
 
   const params = {
     segments: 40,
@@ -24,18 +28,37 @@ const DiceRoller = () => {
     angleEpsilon: .1
   };
 
+  // Define throwDice outside of useEffect so it's accessible to the button
+  const throwDice = useCallback(() => {
+    if (!diceArrayRef.current || diceArrayRef.current.length === 0) return;
+    
+    diceArrayRef.current.forEach(dice => {
+      dice.body.velocity.setZero();
+      dice.body.angularVelocity.setZero();
+      dice.body.position.set(0, 5, 0);
+      dice.mesh.rotation.set(2 * Math.PI * Math.random(), 0, 2 * Math.PI * Math.random());
+      dice.body.quaternion.copy(dice.mesh.quaternion);
+      dice.body.velocity.set(10 * (Math.random() - .5), -5, 10 * (Math.random() - .5));
+      dice.body.angularVelocity.set(20 * Math.random() - 10, 20 * Math.random() - 10, 20 * Math.random() - 10);
+    });
+  }, []);
+
   useEffect(() => {
-    let renderer, scene, camera, diceMesh, physicsWorld;
+    if (!canvasRef.current) return;
+    
+    let renderer, scene, camera, diceMesh;
     let lastShakeTime = 0;
     let lastX = 0, lastY = 0, lastZ = 0;
-    const diceArray = [];
+    
+    // Clear any existing dice
+    diceArrayRef.current = [];
 
     const initPhysics = () => {
-      physicsWorld = new CANNON.World({
+      worldRef.current = new CANNON.World({
         allowSleep: true,
         gravity: new CANNON.Vec3(0, -50, 0),
       });
-      physicsWorld.defaultContactMaterial.restitution = .3;
+      worldRef.current.defaultContactMaterial.restitution = .3;
     };
 
     const initScene = () => {
@@ -53,10 +76,10 @@ const DiceRoller = () => {
 
       updateSceneSize();
 
-      const ambientLight = new THREE.AmbientLight(0xffffff, .5);
+      const ambientLight = new THREE.AmbientLight(0xffffff, .8); // Increased intensity
       scene.add(ambientLight);
       
-      const topLight = new THREE.PointLight(0xffffff, .5);
+      const topLight = new THREE.PointLight(0xffffff, 1.0); // Increased intensity
       topLight.position.set(10, 15, 0);
       topLight.castShadow = true;
       topLight.shadow.mapSize.width = 2048;
@@ -65,12 +88,18 @@ const DiceRoller = () => {
       topLight.shadow.camera.far = 400;
       scene.add(topLight);
       
+      // Add another light from the front
+      const frontLight = new THREE.DirectionalLight(0xffffff, 0.7);
+      frontLight.position.set(0, 3, 10);
+      frontLight.castShadow = true;
+      scene.add(frontLight);
+      
       createFloor();
       diceMesh = createDiceMesh();
       
       for (let i = 0; i < numberOfDice; i++) {
-        diceArray.push(createDice());
-        addDiceEvents(diceArray[i]);
+        diceArrayRef.current.push(createDice());
+        addDiceEvents(diceArrayRef.current[i]);
       }
 
       throwDice();
@@ -93,15 +122,21 @@ const DiceRoller = () => {
       });
       floorBody.position.copy(floor.position);
       floorBody.quaternion.copy(floor.quaternion);
-      physicsWorld.addBody(floorBody);
+      worldRef.current.addBody(floorBody);
     };
 
     const createDiceMesh = () => {
-      const boxMaterialOuter = new THREE.MeshStandardMaterial({ color: 0xeeeeee });
+      // Brighter white color for the dice
+      const boxMaterialOuter = new THREE.MeshStandardMaterial({ 
+        color: 0xffffff,
+        roughness: 0.2,
+        metalness: 0.1
+      });
+      
       const boxMaterialInner = new THREE.MeshStandardMaterial({
         color: 0x000000,
         roughness: 0,
-        metalness: 1,
+        metalness: 0.7,
         side: THREE.DoubleSide
       });
 
@@ -123,55 +158,47 @@ const DiceRoller = () => {
         shape: new CANNON.Box(new CANNON.Vec3(.5, .5, .5)),
         sleepTimeLimit: .1
       });
-      physicsWorld.addBody(body);
+      worldRef.current.addBody(body);
 
       return {mesh, body};
     };
 
     const addDiceEvents = (dice) => {
       dice.body.addEventListener('sleep', (e) => {
-        const euler = new THREE.Euler().setFromQuaternion(dice.body.quaternion);
-        
-        // Determine which face is pointing up
-        let nx = Math.floor(Math.abs(euler.x / (Math.PI * 0.5) + 0.5)) % 2;
-        let ny = Math.floor(Math.abs(euler.y / (Math.PI * 0.5) + 0.5)) % 2;
-        let nz = Math.floor(Math.abs(euler.z / (Math.PI * 0.5) + 0.5)) % 2;
-        
-        let faceValue = 1;
-        if (euler.x < -params.angleEpsilon) faceValue = nx ? 2 : 5;
-        else if (euler.x > params.angleEpsilon) faceValue = nx ? 5 : 2;
-        else if (euler.y < -params.angleEpsilon) faceValue = ny ? 1 : 6;
-        else if (euler.y > params.angleEpsilon) faceValue = ny ? 6 : 1;
-        else if (euler.z < -params.angleEpsilon) faceValue = nz ? 3 : 4;
-        else if (euler.z > params.angleEpsilon) faceValue = nz ? 4 : 3;
-        
-        const diceValues = diceArray.map(d => {
-          const diceEuler = new THREE.Euler().setFromQuaternion(d.body.quaternion);
-          let nx = Math.floor(Math.abs(diceEuler.x / (Math.PI * 0.5) + 0.5)) % 2;
-          let ny = Math.floor(Math.abs(diceEuler.y / (Math.PI * 0.5) + 0.5)) % 2;
-          let nz = Math.floor(Math.abs(diceEuler.z / (Math.PI * 0.5) + 0.5)) % 2;
-          
-          let val = 1;
-          if (diceEuler.x < -params.angleEpsilon) val = nx ? 2 : 5;
-          else if (diceEuler.x > params.angleEpsilon) val = nx ? 5 : 2;
-          else if (diceEuler.y < -params.angleEpsilon) val = ny ? 1 : 6;
-          else if (diceEuler.y > params.angleEpsilon) val = ny ? 6 : 1;
-          else if (diceEuler.z < -params.angleEpsilon) val = nz ? 3 : 4;
-          else if (diceEuler.z > params.angleEpsilon) val = nz ? 4 : 3;
-          
-          return val;
-        });
-        
-        const sum = diceValues.reduce((a, b) => a + b, 0);
-        setScore(sum.toString());
-        
-        if (isHistoryEnabled) {
-          setRollHistory(prev => [
-            `Roll: ${diceValues.join(' + ')} = ${sum}`,
-            ...prev
-          ].slice(0, 10));
-        }
+        // Calculate all dice values and display
+        calculateAllDiceValues();
       });
+    };
+    
+    const calculateAllDiceValues = () => {
+      if (!diceArrayRef.current || diceArrayRef.current.length === 0) return;
+      
+      const diceValues = diceArrayRef.current.map(d => {
+        const diceEuler = new THREE.Euler().setFromQuaternion(d.body.quaternion);
+        let nx = Math.floor(Math.abs(diceEuler.x / (Math.PI * 0.5) + 0.5)) % 2;
+        let ny = Math.floor(Math.abs(diceEuler.y / (Math.PI * 0.5) + 0.5)) % 2;
+        let nz = Math.floor(Math.abs(diceEuler.z / (Math.PI * 0.5) + 0.5)) % 2;
+        
+        let val = 1;
+        if (diceEuler.x < -params.angleEpsilon) val = nx ? 2 : 5;
+        else if (diceEuler.x > params.angleEpsilon) val = nx ? 5 : 2;
+        else if (diceEuler.y < -params.angleEpsilon) val = ny ? 1 : 6;
+        else if (diceEuler.y > params.angleEpsilon) val = ny ? 6 : 1;
+        else if (diceEuler.z < -params.angleEpsilon) val = nz ? 3 : 4;
+        else if (diceEuler.z > params.angleEpsilon) val = nz ? 4 : 3;
+        
+        return val;
+      });
+      
+      const sum = diceValues.reduce((a, b) => a + b, 0);
+      setScore(diceValues.join(' + ') + ' = ' + sum);
+      
+      if (isHistoryEnabled) {
+        setRollHistory(prev => [
+          `Roll: ${diceValues.join(' + ')} = ${sum}`,
+          ...prev
+        ].slice(0, 10));
+      }
     };
 
     const updateSceneSize = () => {
@@ -183,25 +210,13 @@ const DiceRoller = () => {
     };
 
     const render = () => {
-      physicsWorld.step(1/60);
-      diceArray.forEach(dice => {
+      worldRef.current.step(1/60);
+      diceArrayRef.current.forEach(dice => {
         dice.mesh.position.copy(dice.body.position);
         dice.mesh.quaternion.copy(dice.body.quaternion);
       });
       renderer.render(scene, camera);
       requestAnimationFrame(render);
-    };
-
-    const throwDice = () => {
-      diceArray.forEach(dice => {
-        dice.body.velocity.setZero();
-        dice.body.angularVelocity.setZero();
-        dice.body.position.set(0, 5, 0);
-        dice.mesh.rotation.set(2 * Math.PI * Math.random(), 0, 2 * Math.PI * Math.random());
-        dice.body.quaternion.copy(dice.mesh.quaternion);
-        dice.body.velocity.set(10 * (Math.random() - .5), -5, 10 * (Math.random() - .5));
-        dice.body.angularVelocity.set(20 * Math.random() - 10, 20 * Math.random() - 10, 20 * Math.random() - 10);
-      });
     };
 
     const handleDeviceMotion = (event) => {
@@ -243,9 +258,14 @@ const DiceRoller = () => {
     return () => {
       window.removeEventListener('resize', updateSceneSize);
       window.removeEventListener('devicemotion', handleDeviceMotion);
-      renderer?.dispose();
+      if (renderer) {
+        renderer.dispose();
+        scene.clear();
+      }
+      worldRef.current = null;
+      diceArrayRef.current = [];
     };
-  }, [numberOfDice, isHistoryEnabled, setRollHistory, setScore]);
+  }, [numberOfDice, throwDice]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
@@ -305,7 +325,7 @@ const DiceRoller = () => {
       </div>
       <div className="ui-controls">
         <div className="score">Score: <span>{score}</span></div>
-        <button onClick={() => throwDice()}>Throw the dice</button>
+        <button onClick={throwDice}>Throw the dice</button>
         <div className="shake-hint">or<br />Shake your device to roll</div>
       </div>
     </div>
