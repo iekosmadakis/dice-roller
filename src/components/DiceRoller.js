@@ -155,7 +155,7 @@ const DiceRoller = () => {
 
       const diceMesh = new THREE.Group();
       const innerMesh = new THREE.Mesh(createInnerGeometry(), boxMaterialInner);
-      const outerMesh = new THREE.Mesh(createBoxGeometry(params), boxMaterialOuter);
+      const outerMesh = new THREE.Mesh(createBoxGeometry(), boxMaterialOuter);
       outerMesh.castShadow = true;
       diceMesh.add(innerMesh, outerMesh);
 

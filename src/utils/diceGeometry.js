@@ -1,7 +1,15 @@
 import * as THREE from 'three';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 
-export const createBoxGeometry = (params) => {
+// Params for reference
+const defaultParams = {
+  segments: 40,
+  edgeRadius: .07,
+  notchRadius: .12,
+  notchDepth: .1,
+};
+
+export const createBoxGeometry = (params = defaultParams) => {
   let boxGeometry = new THREE.BoxGeometry(1, 1, 1, params.segments, params.segments, params.segments);
   const positionAttr = boxGeometry.attributes.position;
   const subCubeHalfSize = .5 - params.edgeRadius;
@@ -81,14 +89,14 @@ export const createBoxGeometry = (params) => {
 };
 
 export const createInnerGeometry = () => {
-  const baseGeometry = new THREE.PlaneGeometry(1 - 2 * .1, 1 - 2 * .1);
+  const baseGeometry = new THREE.PlaneGeometry(1 - 2 * .07, 1 - 2 * .07);
   const offset = .48;
-  return BufferGeometryUtils.mergeGeometries([
+  return BufferGeometryUtils.mergeBufferGeometries([
     baseGeometry.clone().translate(0, 0, offset),
     baseGeometry.clone().translate(0, 0, -offset),
     baseGeometry.clone().rotateX(.5 * Math.PI).translate(0, -offset, 0),
     baseGeometry.clone().rotateX(.5 * Math.PI).translate(0, offset, 0),
     baseGeometry.clone().rotateY(.5 * Math.PI).translate(-offset, 0, 0),
     baseGeometry.clone().rotateY(.5 * Math.PI).translate(offset, 0, 0),
-  ]);
+  ], false);
 }; 
