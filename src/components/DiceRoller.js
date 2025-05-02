@@ -29,7 +29,7 @@ const DiceRoller = () => {
     notchRadius: .12,
     notchDepth: .1,
     shakeThreshold: 15,
-    shakeCooldown: 1000,
+    shakeCooldown: 2000,
   };
 
   // Define throwDice outside of useEffect so it's accessible to the button
