@@ -90,9 +90,7 @@ const DiceRoller = () => {
         canvas: canvasRef.current
       });
       rendererRef.current.shadowMap.enabled = true;
-      rendererRef.current.shadowMap.type = THREE.PCFSoftShadowMap;
       rendererRef.current.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      rendererRef.current.physicallyCorrectLights = true;
 
       sceneRef.current = new THREE.Scene();
       cameraRef.current = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, .1, 300);
@@ -100,10 +98,10 @@ const DiceRoller = () => {
 
       updateSceneSize();
 
-      const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+      const ambientLight = new THREE.AmbientLight(0xffffff, .5);
       sceneRef.current.add(ambientLight);
       
-      const topLight = new THREE.PointLight(0xffffff, 1.0);
+      const topLight = new THREE.PointLight(0xffffff, .5);
       topLight.position.set(10, 15, 0);
       topLight.castShadow = true;
       topLight.shadow.mapSize.width = 2048;
@@ -112,15 +110,15 @@ const DiceRoller = () => {
       topLight.shadow.camera.far = 400;
       sceneRef.current.add(topLight);
       
-      // // Add front light
-      // const frontLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      // frontLight.position.set(0, 5, 10);
-      // sceneRef.current.add(frontLight);
+      // Add front light
+      const frontLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      frontLight.position.set(0, 5, 10);
+      sceneRef.current.add(frontLight);
 
-      // // Add side light
-      // const sideLight = new THREE.DirectionalLight(0xffffff, 0.6);
-      // sideLight.position.set(10, 5, 0);
-      // sceneRef.current.add(sideLight);
+      // Add side light
+      const sideLight = new THREE.DirectionalLight(0xffffff, 0.6);
+      sideLight.position.set(10, 5, 0);
+      sceneRef.current.add(sideLight);
 
       createFloor();
       diceMeshRef.current = createDiceMesh();
@@ -137,7 +135,7 @@ const DiceRoller = () => {
     const createFloor = () => {
       const floor = new THREE.Mesh(
         new THREE.PlaneGeometry(1000, 1000),
-        new THREE.ShadowMaterial({ opacity: 0.05 })
+        new THREE.ShadowMaterial({ opacity: .1 })
       );
       floor.receiveShadow = true;
       floor.position.y = -7;
@@ -154,11 +152,8 @@ const DiceRoller = () => {
     };
 
     const createDiceMesh = () => {
-      // Use MeshPhongMaterial for a more traditional plastic-like look
-      const boxMaterialOuter = new THREE.MeshPhongMaterial({
-        color: 0xffffff,
-        specular: 0x111111,
-        shininess: 100
+      const boxMaterialOuter = new THREE.MeshStandardMaterial({
+        color: 0xeeeeee
       });
       
       const boxMaterialInner = new THREE.MeshStandardMaterial({
