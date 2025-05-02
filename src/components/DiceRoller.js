@@ -385,17 +385,21 @@ const DiceRoller = () => {
             </label>
           </label>
         </div>
-        {keepHistory && history.length > 0 && (
+        {keepHistory && (
           <div className="history-container">
             <h3>Roll History</h3>
-            <ul className="history-list">
-              {history.map((entry, index) => (
-                <li key={index} className="history-item">
-                  <span className="history-result">{entry.result}</span>
-                  <span className="history-timestamp">{entry.timestamp}</span>
-                </li>
-              ))}
-            </ul>
+            {history.length > 0 ? (
+              <ul className="history-list">
+                {history.map((entry, index) => (
+                  <li key={index} className="history-item">
+                    <span className="history-result">{entry.result}</span>
+                    <span className="history-timestamp">{entry.timestamp}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="empty-history">No rolls yet. Roll the dice to record history.</p>
+            )}
           </div>
         )}
       </div>
