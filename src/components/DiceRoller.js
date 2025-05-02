@@ -239,7 +239,7 @@ const DiceRoller = () => {
         setScore(scoreText);
         
         if (keepHistory) {
-          const timestamp = new Date().toLocaleTimeString();
+          const timestamp = new Date().toLocaleTimeString(undefined, { hour12: false });
           const newEntry = { result: scoreText, timestamp };
           setHistory(prev => [...prev, newEntry]);
         }
