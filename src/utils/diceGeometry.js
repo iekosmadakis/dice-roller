@@ -91,12 +91,12 @@ export const createBoxGeometry = (params = defaultParams) => {
 export const createInnerGeometry = () => {
   const baseGeometry = new THREE.PlaneGeometry(1 - 2 * .07, 1 - 2 * .07);
   const offset = .48;
-  return BufferGeometryUtils.mergeBufferGeometries([
+  return BufferGeometryUtils.mergeGeometries([
     baseGeometry.clone().translate(0, 0, offset),
     baseGeometry.clone().translate(0, 0, -offset),
     baseGeometry.clone().rotateX(.5 * Math.PI).translate(0, -offset, 0),
     baseGeometry.clone().rotateX(.5 * Math.PI).translate(0, offset, 0),
     baseGeometry.clone().rotateY(.5 * Math.PI).translate(-offset, 0, 0),
     baseGeometry.clone().rotateY(.5 * Math.PI).translate(offset, 0, 0),
-  ], false);
+  ]);
 }; 
