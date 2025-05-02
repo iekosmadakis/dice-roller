@@ -22,9 +22,10 @@ const DiceRoller = () => {
   const diceMeshRef = useRef(null);
   const diceArrayRef = useRef([]);
   const animationRef = useRef(null);
-
-  // Store the history data in a separate ref to prevent recreating the scene
   const historyDataRef = useRef([]);
+  const lastScoreRef = useRef('');
+  const isRollingRef = useRef(false);
+  const stabilityTimerRef = useRef(null);
 
   const params = {
     segments: 40,
@@ -33,6 +34,7 @@ const DiceRoller = () => {
     notchDepth: .1,
     shakeThreshold: 15,
     shakeCooldown: 2000,
+    stabilityDelay: 1000, // Time to wait to ensure dice are truly stable
   };
 
   // Define throwDice outside of useEffect so it's accessible to the button
@@ -42,9 +44,21 @@ const DiceRoller = () => {
     // Clear the score display
     setScore('');
     
+    // Mark that we're in a rolling state
+    isRollingRef.current = true;
+    
+    // Clear any existing stability timers
+    if (stabilityTimerRef.current) {
+      clearTimeout(stabilityTimerRef.current);
+      stabilityTimerRef.current = null;
+    }
+    
     diceArrayRef.current.forEach((dice, dIdx) => {
       dice.body.velocity.setZero();
       dice.body.angularVelocity.setZero();
+      
+      // Reset the dice value to ensure we get a fresh reading
+      dice.value = 0;
       
       // Position dice above the scene, offset each one slightly
       dice.body.position = new CANNON.Vec3(3, dIdx * 1.5 + 2, 0);
@@ -75,14 +89,7 @@ const DiceRoller = () => {
     return `${hours}:${minutes}:${seconds}`;
   };
 
-  // Helper function to add to history without triggering scene recreation
-  const addToHistory = useCallback((entry) => {
-    if (isHistoryEnabled) {
-      historyDataRef.current = [entry, ...historyDataRef.current].slice(0, 10);
-      setRollHistory([...historyDataRef.current]);
-    }
-  }, [isHistoryEnabled]);
-
+  // Main effect for 3D scene setup and dice physics
   useEffect(() => {
     if (!canvasRef.current) return;
     
@@ -242,12 +249,26 @@ const DiceRoller = () => {
         // Store the dice value
         dice.value = diceValue;
         
-        // Update the score display
-        updateScoreDisplay();
+        // Update the score display immediately for visual feedback
+        updateScoreDisplay(false);
+        
+        // Clear any existing stability timer
+        if (stabilityTimerRef.current) {
+          clearTimeout(stabilityTimerRef.current);
+        }
+        
+        // Set up a timer to determine if the dice are truly stable
+        stabilityTimerRef.current = setTimeout(() => {
+          // If this timer fires, the dice have been stable for the delay period
+          // Mark that we're no longer rolling and record the final result
+          isRollingRef.current = false;
+          updateScoreDisplay(true);
+          stabilityTimerRef.current = null;
+        }, params.stabilityDelay);
       });
     };
     
-    const updateScoreDisplay = () => {
+    const updateScoreDisplay = (isFinal) => {
       // Collect all dice values
       const diceValues = diceArrayRef.current.map(dice => dice.value).filter(val => val > 0);
       
@@ -255,11 +276,23 @@ const DiceRoller = () => {
       if (diceValues.length === diceArrayRef.current.length) {
         const sum = diceValues.reduce((a, b) => a + b, 0);
         const scoreText = diceValues.join(' + ') + ' = ' + sum;
+        
+        // Always update the score display
         setScore(scoreText);
         
-        // Add to history if enabled, with timestamp
-        const timestamp = getFormattedTime();
-        addToHistory(`[${timestamp}] ${scoreText}`);
+        // Only update history if this is the final result (after stability delay)
+        if (isFinal) {
+          // Store the score in lastScoreRef for history feature
+          const timestamp = getFormattedTime();
+          lastScoreRef.current = `[${timestamp}] ${scoreText}`;
+          
+          // If history is enabled, update it
+          if (isHistoryEnabled) {
+            const newHistory = [lastScoreRef.current, ...historyDataRef.current].slice(0, 10);
+            historyDataRef.current = newHistory;
+            setRollHistory(newHistory);
+          }
+        }
       }
     };
 
@@ -333,6 +366,11 @@ const DiceRoller = () => {
         cancelAnimationFrame(animationRef.current);
       }
       
+      if (stabilityTimerRef.current) {
+        clearTimeout(stabilityTimerRef.current);
+        stabilityTimerRef.current = null;
+      }
+      
       if (rendererRef.current) {
         rendererRef.current.dispose();
       }
@@ -344,17 +382,28 @@ const DiceRoller = () => {
       worldRef.current = null;
       diceArrayRef.current = [];
     };
-  }, [numberOfDice, throwDice, addToHistory]);
+  }, [numberOfDice, throwDice]); // Removed isHistoryEnabled and addToHistory dependencies
 
+  // Theme toggle effect
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
     localStorage.setItem('theme', isDarkTheme ? 'dark' : 'light');
   }, [isDarkTheme]);
 
-  // Clear history when history is disabled
+  // History toggle effect - completely separated from main scene rendering
   useEffect(() => {
-    if (!isHistoryEnabled) {
-      historyDataRef.current = [];
+    if (isHistoryEnabled) {
+      // If enabling history and we have a last score, add it
+      if (lastScoreRef.current && !historyDataRef.current.includes(lastScoreRef.current)) {
+        const newHistory = [lastScoreRef.current, ...historyDataRef.current].slice(0, 10);
+        historyDataRef.current = newHistory;
+        setRollHistory(newHistory);
+      } else {
+        // Just show current history
+        setRollHistory([...historyDataRef.current]);
+      }
+    } else {
+      // When disabling, just clear the displayed history but keep the data
       setRollHistory([]);
     }
   }, [isHistoryEnabled]);
