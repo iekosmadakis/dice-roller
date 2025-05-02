@@ -11,6 +11,8 @@ const DiceRoller = () => {
     const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
     return localStorage.getItem('theme') === 'dark' || prefersDarkScheme.matches;
   });
+  const [keepHistory, setKeepHistory] = useState(false);
+  const [history, setHistory] = useState([]);
   
   const worldRef = useRef(null);
   const sceneRef = useRef(null);
@@ -235,6 +237,11 @@ const DiceRoller = () => {
         const scoreText = diceValues.join(' + ') + ' = ' + sum;
         
         setScore(scoreText);
+        
+        if (keepHistory) {
+          const timestamp = new Date().toLocaleTimeString();
+          setHistory(prev => [...prev, { result: scoreText, timestamp }]);
+        }
       }
     };
 
@@ -329,6 +336,12 @@ const DiceRoller = () => {
     localStorage.setItem('theme', isDarkTheme ? 'dark' : 'light');
   }, [isDarkTheme]);
 
+  useEffect(() => {
+    if (!keepHistory) {
+      setHistory([]);
+    }
+  }, [keepHistory]);
+
   return (
     <div className="dice-roller">
       <canvas ref={canvasRef} id="canvas" />
@@ -359,6 +372,32 @@ const DiceRoller = () => {
             </label>
           </label>
         </div>
+        <div className="theme-control">
+          <label className="theme-toggle">
+            <span>Keep History</span>
+            <label className="switch">
+              <input 
+                type="checkbox" 
+                checked={keepHistory}
+                onChange={(e) => setKeepHistory(e.target.checked)}
+              />
+              <span className="slider"></span>
+            </label>
+          </label>
+        </div>
+        {keepHistory && history.length > 0 && (
+          <div className="history-container">
+            <h3>Roll History</h3>
+            <ul className="history-list">
+              {history.map((entry, index) => (
+                <li key={index} className="history-item">
+                  <span className="history-result">{entry.result}</span>
+                  <span className="history-timestamp">{entry.timestamp}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
       <div className="ui-controls">
         <div className="score">Score: <span>{score}</span></div>

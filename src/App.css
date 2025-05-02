@@ -205,4 +205,44 @@ input:checked + .slider {
 
 input:checked + .slider:before {
   transform: translateX(20px);
+}
+
+.history-container {
+  margin-top: 15px;
+  border-top: 1px solid #ccc;
+  padding-top: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.history-container h3 {
+  margin: 0 0 10px 0;
+  font-size: 1em;
+  color: var(--color-text);
+}
+
+.history-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(204, 204, 204, 0.3);
+  font-size: 0.9em;
+}
+
+.history-result {
+  font-weight: bold;
+  color: #273e9a;
+}
+
+.history-timestamp {
+  color: #666;
+  font-size: 0.8em;
+  margin-left: 10px;
 } 
