@@ -8,8 +8,8 @@ const DiceRoller = () => {
   const [score, setScore] = useState('');
   const [numberOfDice, setNumberOfDice] = useState(2);
   const [isDarkTheme, setIsDarkTheme] = useState(() => {
-    const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-    return localStorage.getItem('theme') === 'dark' || prefersDarkScheme.matches;
+    // Get from localStorage, default to false
+    return localStorage.getItem('theme') === 'dark' ? true : false;
   });
   const [keepHistory, setKeepHistory] = useState(false);
   const [history, setHistory] = useState([]);
