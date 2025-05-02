@@ -7,12 +7,10 @@ const DiceRoller = () => {
   const canvasRef = useRef(null);
   const [score, setScore] = useState('');
   const [numberOfDice, setNumberOfDice] = useState(2);
-  const [isHistoryEnabled, setIsHistoryEnabled] = useState(false);
   const [isDarkTheme, setIsDarkTheme] = useState(() => {
     const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
     return localStorage.getItem('theme') === 'dark' || prefersDarkScheme.matches;
   });
-  const [rollHistory, setRollHistory] = useState([]);
   
   const worldRef = useRef(null);
   const sceneRef = useRef(null);
@@ -21,7 +19,6 @@ const DiceRoller = () => {
   const diceMeshRef = useRef(null);
   const diceArrayRef = useRef([]);
   const animationRef = useRef(null);
-  const historyDataRef = useRef([]);
   const isRollingRef = useRef(false);
   const stabilityTimerRef = useRef(null);
 
@@ -66,14 +63,6 @@ const DiceRoller = () => {
       dice.body.allowSleep = true;
     });
   }, []);
-
-  const getFormattedTime = () => {
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    const seconds = now.getSeconds().toString().padStart(2, '0');
-    return `${hours}:${minutes}:${seconds}`;
-  };
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -225,7 +214,7 @@ const DiceRoller = () => {
         dice.value = diceValue;
         dice.body.allowSleep = true;
         
-        updateScoreDisplay(false);
+        updateScoreDisplay();
         
         if (stabilityTimerRef.current) {
           clearTimeout(stabilityTimerRef.current);
@@ -233,13 +222,12 @@ const DiceRoller = () => {
         
         stabilityTimerRef.current = setTimeout(() => {
           isRollingRef.current = false;
-          updateScoreDisplay(true);
           stabilityTimerRef.current = null;
         }, params.stabilityDelay);
       });
     };
     
-    const updateScoreDisplay = (isFinal) => {
+    const updateScoreDisplay = () => {
       const diceValues = diceArrayRef.current.map(dice => dice.value).filter(val => val > 0);
       
       if (diceValues.length === diceArrayRef.current.length) {
@@ -247,15 +235,6 @@ const DiceRoller = () => {
         const scoreText = diceValues.join(' + ') + ' = ' + sum;
         
         setScore(scoreText);
-        
-        if (isFinal && isHistoryEnabled) {
-          const timestamp = getFormattedTime();
-          const historyEntry = `[${timestamp}] ${scoreText}`;
-          
-          const newHistory = [historyEntry, ...historyDataRef.current].slice(0, 10);
-          historyDataRef.current = newHistory;
-          setRollHistory(newHistory);
-        }
       }
     };
 
@@ -349,13 +328,6 @@ const DiceRoller = () => {
     localStorage.setItem('theme', isDarkTheme ? 'dark' : 'light');
   }, [isDarkTheme]);
 
-  useEffect(() => {
-    if (!isHistoryEnabled) {
-      historyDataRef.current = [];
-      setRollHistory([]);
-    }
-  }, [isHistoryEnabled]);
-
   return (
     <div className="dice-roller">
       <canvas ref={canvasRef} id="canvas" />
@@ -373,19 +345,8 @@ const DiceRoller = () => {
             <option value="4">4</option>
           </select>
         </div>
-        <div className="history-controls">
-          <label className="history-toggle">
-            <span>Keep History</span>
-            <label className="switch">
-              <input 
-                type="checkbox" 
-                checked={isHistoryEnabled}
-                onChange={(e) => setIsHistoryEnabled(e.target.checked)}
-              />
-              <span className="slider"></span>
-            </label>
-          </label>
-          <label className="history-toggle">
+        <div className="theme-control">
+          <label className="theme-toggle">
             <span>Dark Theme</span>
             <label className="switch">
               <input 
@@ -397,16 +358,6 @@ const DiceRoller = () => {
             </label>
           </label>
         </div>
-        {isHistoryEnabled && (
-          <div className="history-container dice-history">
-            <h3>Roll History</h3>
-            <ul className="history-list">
-              {rollHistory.map((roll, index) => (
-                <li key={index}>{roll}</li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
       <div className="ui-controls">
         <div className="score">Score: <span>{score}</span></div>
