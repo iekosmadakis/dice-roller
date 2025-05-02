@@ -151,8 +151,8 @@ canvas {
 }
 
 .theme-control {
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 /* Remove all borders from theme controls */
@@ -237,6 +237,7 @@ input:checked + .slider:before {
   font-size: 0.9em;
   font-weight: bold;
   color: var(--color-text);
+  text-align: center;
 }
 
 .history-list {

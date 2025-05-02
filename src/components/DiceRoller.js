@@ -399,7 +399,7 @@ const DiceRoller = () => {
                 ))}
               </ul>
             ) : (
-              <p className="empty-history">No rolls yet. Roll the dice to record history.</p>
+              <p className="empty-history">No rolls yet.</p>
             )}
           </div>
         )}
