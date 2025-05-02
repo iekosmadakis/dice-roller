@@ -98,7 +98,7 @@ const DiceRoller = () => {
 
       updateSceneSize();
 
-      const ambientLight = new THREE.AmbientLight(0xffffff, .5);
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
       sceneRef.current.add(ambientLight);
       
       const topLight = new THREE.PointLight(0xffffff, .5);
@@ -143,7 +143,9 @@ const DiceRoller = () => {
 
     const createDiceMesh = () => {
       const boxMaterialOuter = new THREE.MeshStandardMaterial({
-        color: 0xeeeeee
+        color: 0xffffff,
+        roughness: 0.2,
+        metalness: 0.1
       });
       
       const boxMaterialInner = new THREE.MeshStandardMaterial({
