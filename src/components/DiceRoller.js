@@ -244,10 +244,7 @@ const DiceRoller = () => {
       
       if (diceValues.length === diceArrayRef.current.length) {
         const sum = diceValues.reduce((a, b) => a + b, 0);
-        // For single die, just show the number
-        const scoreText = diceValues.length === 1 
-          ? sum.toString() 
-          : diceValues.join(' + ') + ' = ' + sum;
+        const scoreText = diceValues.join(' + ') + ' = ' + sum;
         
         setScore(scoreText);
         
