@@ -14,7 +14,6 @@ const DiceRoller = () => {
   });
   const [rollHistory, setRollHistory] = useState([]);
   
-  // Create refs for persistent values across renders
   const worldRef = useRef(null);
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
@@ -23,7 +22,6 @@ const DiceRoller = () => {
   const diceArrayRef = useRef([]);
   const animationRef = useRef(null);
   const historyDataRef = useRef([]);
-  const lastScoreRef = useRef('');
   const isRollingRef = useRef(false);
   const stabilityTimerRef = useRef(null);
 
@@ -34,20 +32,15 @@ const DiceRoller = () => {
     notchDepth: .1,
     shakeThreshold: 15,
     shakeCooldown: 2000,
-    stabilityDelay: 1000, // Time to wait to ensure dice are truly stable
+    stabilityDelay: 500,
   };
 
-  // Define throwDice outside of useEffect so it's accessible to the button
   const throwDice = useCallback(() => {
     if (!diceArrayRef.current || diceArrayRef.current.length === 0) return;
     
-    // Clear the score display
     setScore('');
-    
-    // Mark that we're in a rolling state
     isRollingRef.current = true;
     
-    // Clear any existing stability timers
     if (stabilityTimerRef.current) {
       clearTimeout(stabilityTimerRef.current);
       stabilityTimerRef.current = null;
@@ -56,31 +49,24 @@ const DiceRoller = () => {
     diceArrayRef.current.forEach((dice, dIdx) => {
       dice.body.velocity.setZero();
       dice.body.angularVelocity.setZero();
-      
-      // Reset the dice value to ensure we get a fresh reading
       dice.value = 0;
       
-      // Position dice above the scene, offset each one slightly
       dice.body.position = new CANNON.Vec3(3, dIdx * 1.5 + 2, 0);
       dice.mesh.position.copy(dice.body.position);
       
-      // Random initial rotation
       dice.mesh.rotation.set(2 * Math.PI * Math.random(), 0, 2 * Math.PI * Math.random());
       dice.body.quaternion.copy(dice.mesh.quaternion);
       
-      // Apply impulse force with some randomness
       const force = 3 + 5 * Math.random();
       dice.body.applyImpulse(
         new CANNON.Vec3(-force, force, 0),
         new CANNON.Vec3(0, 0, .2)
       );
       
-      // Allow dice to go to sleep state when it stops moving
       dice.body.allowSleep = true;
     });
   }, []);
 
-  // Helper function to format the current time as HH:MM:SS
   const getFormattedTime = () => {
     const now = new Date();
     const hours = now.getHours().toString().padStart(2, '0');
@@ -89,16 +75,13 @@ const DiceRoller = () => {
     return `${hours}:${minutes}:${seconds}`;
   };
 
-  // Main effect for 3D scene setup and dice physics
   useEffect(() => {
     if (!canvasRef.current) return;
     
-    // Clear previous animation if it exists
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
     
-    // Clear any existing dice
     diceArrayRef.current = [];
     
     const initPhysics = () => {
@@ -168,7 +151,6 @@ const DiceRoller = () => {
     };
 
     const createDiceMesh = () => {
-      // Match exactly the original color and material properties
       const boxMaterialOuter = new THREE.MeshStandardMaterial({
         color: 0xeeeeee
       });
@@ -205,21 +187,17 @@ const DiceRoller = () => {
 
     const addDiceEvents = (dice) => {
       dice.body.addEventListener('sleep', (e) => {
-        // Initially don't allow sleep - we'll re-enable it if we detect a valid face
         dice.body.allowSleep = false;
         
-        // Get the Euler angles from quaternion
         const euler = new CANNON.Vec3();
         e.target.quaternion.toEuler(euler);
         
-        // Define threshold for angle detection
         const eps = .1;
         const isZero = (angle) => Math.abs(angle) < eps;
         const isHalfPi = (angle) => Math.abs(angle - .5 * Math.PI) < eps;
         const isMinusHalfPi = (angle) => Math.abs(.5 * Math.PI + angle) < eps;
         const isPiOrMinusPi = (angle) => (Math.abs(Math.PI - angle) < eps || Math.abs(Math.PI + angle) < eps);
         
-        // Determine dice value based on orientation
         let diceValue = 0;
         
         if (isZero(euler.z)) {
@@ -232,7 +210,6 @@ const DiceRoller = () => {
           } else if (isPiOrMinusPi(euler.x)) {
             diceValue = 6;
           } else {
-            // landed on edge => wait to fall on side and fire the event again
             dice.body.allowSleep = true;
             return;
           }
@@ -241,26 +218,20 @@ const DiceRoller = () => {
         } else if (isMinusHalfPi(euler.z)) {
           diceValue = 5;
         } else {
-          // landed on edge => wait to fall on side and fire the event again
           dice.body.allowSleep = true;
           return;
         }
         
-        // Store the dice value
         dice.value = diceValue;
+        dice.body.allowSleep = true;
         
-        // Update the score display immediately for visual feedback
         updateScoreDisplay(false);
         
-        // Clear any existing stability timer
         if (stabilityTimerRef.current) {
           clearTimeout(stabilityTimerRef.current);
         }
         
-        // Set up a timer to determine if the dice are truly stable
         stabilityTimerRef.current = setTimeout(() => {
-          // If this timer fires, the dice have been stable for the delay period
-          // Mark that we're no longer rolling and record the final result
           isRollingRef.current = false;
           updateScoreDisplay(true);
           stabilityTimerRef.current = null;
@@ -269,29 +240,21 @@ const DiceRoller = () => {
     };
     
     const updateScoreDisplay = (isFinal) => {
-      // Collect all dice values
       const diceValues = diceArrayRef.current.map(dice => dice.value).filter(val => val > 0);
       
-      // Only update if all dice have values
       if (diceValues.length === diceArrayRef.current.length) {
         const sum = diceValues.reduce((a, b) => a + b, 0);
         const scoreText = diceValues.join(' + ') + ' = ' + sum;
         
-        // Always update the score display
         setScore(scoreText);
         
-        // Only update history if this is the final result (after stability delay)
-        if (isFinal) {
-          // Store the score in lastScoreRef for history feature
+        if (isFinal && isHistoryEnabled) {
           const timestamp = getFormattedTime();
-          lastScoreRef.current = `[${timestamp}] ${scoreText}`;
+          const historyEntry = `[${timestamp}] ${scoreText}`;
           
-          // If history is enabled, update it
-          if (isHistoryEnabled) {
-            const newHistory = [lastScoreRef.current, ...historyDataRef.current].slice(0, 10);
-            historyDataRef.current = newHistory;
-            setRollHistory(newHistory);
-          }
+          const newHistory = [historyEntry, ...historyDataRef.current].slice(0, 10);
+          historyDataRef.current = newHistory;
+          setRollHistory(newHistory);
         }
       }
     };
@@ -305,7 +268,7 @@ const DiceRoller = () => {
     };
 
     const render = () => {
-      worldRef.current.fixedStep(); // Use fixedStep for more stable physics
+      worldRef.current.fixedStep();
       
       diceArrayRef.current.forEach(dice => {
         dice.mesh.position.copy(dice.body.position);
@@ -349,15 +312,12 @@ const DiceRoller = () => {
       }
     };
 
-    // Initialize everything
     initPhysics();
     initScene();
     initShakeDetection();
 
-    // Add event listeners
     window.addEventListener('resize', updateSceneSize);
 
-    // Cleanup function
     return () => {
       window.removeEventListener('resize', updateSceneSize);
       window.removeEventListener('devicemotion', handleDeviceMotion);
@@ -382,28 +342,16 @@ const DiceRoller = () => {
       worldRef.current = null;
       diceArrayRef.current = [];
     };
-  }, [numberOfDice, throwDice]); // Removed isHistoryEnabled and addToHistory dependencies
+  }, [numberOfDice, throwDice]);
 
-  // Theme toggle effect
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
     localStorage.setItem('theme', isDarkTheme ? 'dark' : 'light');
   }, [isDarkTheme]);
 
-  // History toggle effect - completely separated from main scene rendering
   useEffect(() => {
-    if (isHistoryEnabled) {
-      // If enabling history and we have a last score, add it
-      if (lastScoreRef.current && !historyDataRef.current.includes(lastScoreRef.current)) {
-        const newHistory = [lastScoreRef.current, ...historyDataRef.current].slice(0, 10);
-        historyDataRef.current = newHistory;
-        setRollHistory(newHistory);
-      } else {
-        // Just show current history
-        setRollHistory([...historyDataRef.current]);
-      }
-    } else {
-      // When disabling, just clear the displayed history but keep the data
+    if (!isHistoryEnabled) {
+      historyDataRef.current = [];
       setRollHistory([]);
     }
   }, [isHistoryEnabled]);
