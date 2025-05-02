@@ -57,12 +57,15 @@ export const createBoxGeometry = (params) => {
     } else if (position.x === -.5) {
       position.x += notch([position.y + offset, position.z + offset]);
       position.x += notch([position.y + offset, position.z - offset]);
+      position.x += notch([position.y, position.z]);
       position.x += notch([position.y - offset, position.z + offset]);
       position.x += notch([position.y - offset, position.z - offset]);
     } else if (position.y === -.5) {
       position.y += notch([position.x + offset, position.z + offset]);
+      position.y += notch([position.x + offset, position.z]);
       position.y += notch([position.x + offset, position.z - offset]);
       position.y += notch([position.x - offset, position.z + offset]);
+      position.y += notch([position.x - offset, position.z]);
       position.y += notch([position.x - offset, position.z - offset]);
     }
 
@@ -79,7 +82,7 @@ export const createBoxGeometry = (params) => {
 
 export const createInnerGeometry = () => {
   const baseGeometry = new THREE.PlaneGeometry(1 - 2 * .1, 1 - 2 * .1);
-  const offset = .47;
+  const offset = .48;
   return BufferGeometryUtils.mergeGeometries([
     baseGeometry.clone().translate(0, 0, offset),
     baseGeometry.clone().translate(0, 0, -offset),
