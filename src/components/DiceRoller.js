@@ -240,7 +240,8 @@ const DiceRoller = () => {
         
         if (keepHistory) {
           const timestamp = new Date().toLocaleTimeString();
-          setHistory(prev => [...prev, { result: scoreText, timestamp }]);
+          const newEntry = { result: scoreText, timestamp };
+          setHistory(prev => [...prev, newEntry]);
         }
       }
     };
@@ -329,7 +330,7 @@ const DiceRoller = () => {
       worldRef.current = null;
       diceArrayRef.current = [];
     };
-  }, [numberOfDice, throwDice]);
+  }, [numberOfDice, throwDice, keepHistory]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');

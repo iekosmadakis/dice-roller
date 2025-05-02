@@ -71,10 +71,13 @@ canvas {
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
 }
 
 .dice-selector label {
   font-weight: bold;
+  font-size: 0.9em;
 }
 
 .dice-selector select {
@@ -148,12 +151,15 @@ canvas {
 }
 
 .theme-control {
-  border-top: 1px solid #ccc;
   padding-top: 10px;
+  padding-bottom: 10px;
 }
 
-.theme-control:first-of-type {
+/* Remove all borders from theme controls */
+.theme-control:first-child,
+.theme-control {
   border-top: none;
+  border-bottom: none;
 }
 
 .theme-toggle {
@@ -228,7 +234,8 @@ input:checked + .slider:before {
 
 .history-container h3 {
   margin: 0 0 10px 0;
-  font-size: 1em;
+  font-size: 0.9em;
+  font-weight: bold;
   color: var(--color-text);
 }
 
