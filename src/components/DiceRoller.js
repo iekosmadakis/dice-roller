@@ -23,6 +23,10 @@ const DiceRoller = () => {
   const animationRef = useRef(null);
   const isRollingRef = useRef(false);
   const stabilityTimerRef = useRef(null);
+  const lastShakeTimeRef = useRef(0);
+  const lastXRef = useRef(0);
+  const lastYRef = useRef(0);
+  const lastZRef = useRef(0);
 
   const params = {
     segments: 40,
@@ -278,10 +282,8 @@ const DiceRoller = () => {
 
     const handleDeviceMotion = (event) => {
       const currentTime = new Date().getTime();
-      let lastShakeTime = 0; 
-      let lastX = 0, lastY = 0, lastZ = 0;
       
-      if (currentTime - lastShakeTime < params.shakeCooldown) return;
+      if (currentTime - lastShakeTimeRef.current < params.shakeCooldown) return;
 
       const acceleration = event.accelerationIncludingGravity;
       if (!acceleration) return;
@@ -289,19 +291,19 @@ const DiceRoller = () => {
       const { x, y, z } = acceleration;
 
       const movement = Math.sqrt(
-        Math.pow(x - lastX, 2) +
-        Math.pow(y - lastY, 2) +
-        Math.pow(z - lastZ, 2)
+        Math.pow(x - lastXRef.current, 2) +
+        Math.pow(y - lastYRef.current, 2) +
+        Math.pow(z - lastZRef.current, 2)
       );
 
       if (movement > params.shakeThreshold) {
-        lastShakeTime = currentTime;
+        lastShakeTimeRef.current = currentTime;
         throwDice();
       }
 
-      lastX = x;
-      lastY = y;
-      lastZ = z;
+      lastXRef.current = x;
+      lastYRef.current = y;
+      lastZRef.current = z;
     };
 
     const initShakeDetection = () => {
