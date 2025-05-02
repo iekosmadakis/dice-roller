@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as CANNON from 'cannon-es';
 import * as THREE from 'three';
-import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
+import { createBoxGeometry, createInnerGeometry } from '../utils/diceGeometry';
 
 const DiceRoller = () => {
   const canvasRef = useRef(null);
@@ -107,7 +107,7 @@ const DiceRoller = () => {
 
       const diceMesh = new THREE.Group();
       const innerMesh = new THREE.Mesh(createInnerGeometry(), boxMaterialInner);
-      const outerMesh = new THREE.Mesh(createBoxGeometry(), boxMaterialOuter);
+      const outerMesh = new THREE.Mesh(createBoxGeometry(params), boxMaterialOuter);
       outerMesh.castShadow = true;
       diceMesh.add(innerMesh, outerMesh);
 
@@ -126,6 +126,52 @@ const DiceRoller = () => {
       physicsWorld.addBody(body);
 
       return {mesh, body};
+    };
+
+    const addDiceEvents = (dice) => {
+      dice.body.addEventListener('sleep', (e) => {
+        const euler = new THREE.Euler().setFromQuaternion(dice.body.quaternion);
+        
+        // Determine which face is pointing up
+        let nx = Math.floor(Math.abs(euler.x / (Math.PI * 0.5) + 0.5)) % 2;
+        let ny = Math.floor(Math.abs(euler.y / (Math.PI * 0.5) + 0.5)) % 2;
+        let nz = Math.floor(Math.abs(euler.z / (Math.PI * 0.5) + 0.5)) % 2;
+        
+        let faceValue = 1;
+        if (euler.x < -params.angleEpsilon) faceValue = nx ? 2 : 5;
+        else if (euler.x > params.angleEpsilon) faceValue = nx ? 5 : 2;
+        else if (euler.y < -params.angleEpsilon) faceValue = ny ? 1 : 6;
+        else if (euler.y > params.angleEpsilon) faceValue = ny ? 6 : 1;
+        else if (euler.z < -params.angleEpsilon) faceValue = nz ? 3 : 4;
+        else if (euler.z > params.angleEpsilon) faceValue = nz ? 4 : 3;
+        
+        const diceValues = diceArray.map(d => {
+          const diceEuler = new THREE.Euler().setFromQuaternion(d.body.quaternion);
+          let nx = Math.floor(Math.abs(diceEuler.x / (Math.PI * 0.5) + 0.5)) % 2;
+          let ny = Math.floor(Math.abs(diceEuler.y / (Math.PI * 0.5) + 0.5)) % 2;
+          let nz = Math.floor(Math.abs(diceEuler.z / (Math.PI * 0.5) + 0.5)) % 2;
+          
+          let val = 1;
+          if (diceEuler.x < -params.angleEpsilon) val = nx ? 2 : 5;
+          else if (diceEuler.x > params.angleEpsilon) val = nx ? 5 : 2;
+          else if (diceEuler.y < -params.angleEpsilon) val = ny ? 1 : 6;
+          else if (diceEuler.y > params.angleEpsilon) val = ny ? 6 : 1;
+          else if (diceEuler.z < -params.angleEpsilon) val = nz ? 3 : 4;
+          else if (diceEuler.z > params.angleEpsilon) val = nz ? 4 : 3;
+          
+          return val;
+        });
+        
+        const sum = diceValues.reduce((a, b) => a + b, 0);
+        setScore(sum.toString());
+        
+        if (isHistoryEnabled) {
+          setRollHistory(prev => [
+            `Roll: ${diceValues.join(' + ')} = ${sum}`,
+            ...prev
+          ].slice(0, 10));
+        }
+      });
     };
 
     const updateSceneSize = () => {
@@ -199,7 +245,7 @@ const DiceRoller = () => {
       window.removeEventListener('devicemotion', handleDeviceMotion);
       renderer?.dispose();
     };
-  }, [numberOfDice]);
+  }, [numberOfDice, isHistoryEnabled, setRollHistory, setScore]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
@@ -266,4 +312,4 @@ const DiceRoller = () => {
   );
 };
 
-export default DiceRoller; 
+export default DiceRoller;

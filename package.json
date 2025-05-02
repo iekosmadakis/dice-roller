@@ -7,14 +7,13 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
-    "preview": "serve -s build"
+    "build": "react-scripts build"
   },
   "dependencies": {
+    "cannon-es": ">=0.20.0",
     "react": ">=19.1.0",
     "react-dom": ">=19.11.0",
     "react-scripts": ">=5.0.1",
-    "serve": ">=14.2.4",
     "three": ">=0.176.0"
   }
-} 
+}
