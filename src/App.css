@@ -223,6 +223,11 @@ input:checked + .slider:before {
   background: var(--color-history-bg);
   border-radius: 4px;
   padding: 8px;
+  width: 100%;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .history-container h3 {
@@ -246,4 +251,14 @@ input:checked + .slider:before {
 
 .history-list li:last-child {
   border-bottom: none;
+}
+
+.dice-history {
+  position: absolute;
+  top: 160px;
+  right: 20px;
+  width: 250px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 999;
 } 

@@ -396,16 +396,17 @@ const DiceRoller = () => {
               <span className="slider"></span>
             </label>
           </label>
-          {isHistoryEnabled && (
-            <div className="history-container">
-              <ul className="history-list">
-                {rollHistory.map((roll, index) => (
-                  <li key={index}>{roll}</li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
+        {isHistoryEnabled && (
+          <div className="history-container dice-history">
+            <h3>Roll History</h3>
+            <ul className="history-list">
+              {rollHistory.map((roll, index) => (
+                <li key={index}>{roll}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
       <div className="ui-controls">
         <div className="score">Score: <span>{score}</span></div>
