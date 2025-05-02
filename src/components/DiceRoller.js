@@ -63,6 +63,15 @@ const DiceRoller = () => {
     });
   }, []);
 
+  // Helper function to format the current time as HH:MM:SS
+  const getFormattedTime = () => {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  };
+
   useEffect(() => {
     if (!canvasRef.current) return;
     
@@ -237,10 +246,11 @@ const DiceRoller = () => {
         const scoreText = diceValues.join(' + ') + ' = ' + sum;
         setScore(scoreText);
         
-        // Add to history if enabled
+        // Add to history if enabled, with timestamp
         if (isHistoryEnabled) {
+          const timestamp = getFormattedTime();
           setRollHistory(prev => [
-            `Roll: ${scoreText}`,
+            `[${timestamp}] ${scoreText}`,
             ...prev
           ].slice(0, 10));
         }
