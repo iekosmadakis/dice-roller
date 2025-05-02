@@ -23,6 +23,9 @@ const DiceRoller = () => {
   const diceArrayRef = useRef([]);
   const animationRef = useRef(null);
 
+  // Store the history data in a separate ref to prevent recreating the scene
+  const historyDataRef = useRef([]);
+
   const params = {
     segments: 40,
     edgeRadius: .07,
@@ -71,6 +74,14 @@ const DiceRoller = () => {
     const seconds = now.getSeconds().toString().padStart(2, '0');
     return `${hours}:${minutes}:${seconds}`;
   };
+
+  // Helper function to add to history without triggering scene recreation
+  const addToHistory = useCallback((entry) => {
+    if (isHistoryEnabled) {
+      historyDataRef.current = [entry, ...historyDataRef.current].slice(0, 10);
+      setRollHistory([...historyDataRef.current]);
+    }
+  }, [isHistoryEnabled]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -247,13 +258,8 @@ const DiceRoller = () => {
         setScore(scoreText);
         
         // Add to history if enabled, with timestamp
-        if (isHistoryEnabled) {
-          const timestamp = getFormattedTime();
-          setRollHistory(prev => [
-            `[${timestamp}] ${scoreText}`,
-            ...prev
-          ].slice(0, 10));
-        }
+        const timestamp = getFormattedTime();
+        addToHistory(`[${timestamp}] ${scoreText}`);
       }
     };
 
@@ -338,12 +344,20 @@ const DiceRoller = () => {
       worldRef.current = null;
       diceArrayRef.current = [];
     };
-  }, [numberOfDice, throwDice, isHistoryEnabled]);
+  }, [numberOfDice, throwDice, addToHistory]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
     localStorage.setItem('theme', isDarkTheme ? 'dark' : 'light');
   }, [isDarkTheme]);
+
+  // Clear history when history is disabled
+  useEffect(() => {
+    if (!isHistoryEnabled) {
+      historyDataRef.current = [];
+      setRollHistory([]);
+    }
+  }, [isHistoryEnabled]);
 
   return (
     <div className="dice-roller">
