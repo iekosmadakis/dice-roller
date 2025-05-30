@@ -13,6 +13,7 @@ const DiceRoller = () => {
   });
   const [keepHistory, setKeepHistory] = useState(false);
   const [history, setHistory] = useState([]);
+  const [isPanelVisible, setIsPanelVisible] = useState(true);
   
   const worldRef = useRef(null);
   const sceneRef = useRef(null);
@@ -356,64 +357,83 @@ const DiceRoller = () => {
   return (
     <div className="dice-roller">
       <canvas ref={canvasRef} id="canvas" />
-      <div className="dice-selector">
-        <div className="selector-row">
-          <label htmlFor="dice-number">Number of dice:</label>
-          <select 
-            id="dice-number" 
-            value={numberOfDice}
-            onChange={(e) => setNumberOfDice(parseInt(e.target.value))}
-          >
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-          </select>
-        </div>
-        <div className="theme-control">
-          <label className="theme-toggle">
-            <span>Dark Theme</span>
-            <label className="switch">
-              <input 
-                type="checkbox" 
-                checked={isDarkTheme}
-                onChange={(e) => setIsDarkTheme(e.target.checked)}
-              />
-              <span className="slider"></span>
-            </label>
-          </label>
-        </div>
-        <div className="theme-control">
-          <label className="theme-toggle">
-            <span>Keep History</span>
-            <label className="switch">
-              <input 
-                type="checkbox" 
-                checked={keepHistory}
-                onChange={(e) => setKeepHistory(e.target.checked)}
-              />
-              <span className="slider"></span>
-            </label>
-          </label>
-        </div>
-        {keepHistory && (
-          <div className="history-container">
-            <h3>Roll History</h3>
-            {history.length > 0 ? (
-              <ul className="history-list">
-                {history.map((entry, index) => (
-                  <li key={index} className="history-item">
-                    <span className="history-result">{entry.result}</span>
-                    <span className="history-timestamp">{entry.timestamp}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="empty-history">No rolls yet.</p>
-            )}
-          </div>
-        )}
+      
+      {/* Header with app name */}
+      <div className="app-header">
+        <h1>3D Dice Roller</h1>
       </div>
+
+      {/* Panel toggle button */}
+      <button 
+        className="panel-toggle"
+        onClick={() => setIsPanelVisible(!isPanelVisible)}
+        title={isPanelVisible ? "Hide Settings" : "Show Settings"}
+      >
+        {isPanelVisible ? '✕' : '⚙️'}
+      </button>
+
+      {/* Settings panel */}
+      {isPanelVisible && (
+        <div className="dice-selector">
+          <div className="selector-row">
+            <label htmlFor="dice-number">Number of dice:</label>
+            <select 
+              id="dice-number" 
+              value={numberOfDice}
+              onChange={(e) => setNumberOfDice(parseInt(e.target.value))}
+            >
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+          <div className="theme-control">
+            <label className="theme-toggle">
+              <span>Dark Theme</span>
+              <label className="switch">
+                <input 
+                  type="checkbox" 
+                  checked={isDarkTheme}
+                  onChange={(e) => setIsDarkTheme(e.target.checked)}
+                />
+                <span className="slider"></span>
+              </label>
+            </label>
+          </div>
+          <div className="theme-control">
+            <label className="theme-toggle">
+              <span>Keep History</span>
+              <label className="switch">
+                <input 
+                  type="checkbox" 
+                  checked={keepHistory}
+                  onChange={(e) => setKeepHistory(e.target.checked)}
+                />
+                <span className="slider"></span>
+              </label>
+            </label>
+          </div>
+          {keepHistory && (
+            <div className="history-container">
+              <h3>Roll History</h3>
+              {history.length > 0 ? (
+                <ul className="history-list">
+                  {history.map((entry, index) => (
+                    <li key={index} className="history-item">
+                      <span className="history-result">{entry.result}</span>
+                      <span className="history-timestamp">{entry.timestamp}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="empty-history">No rolls yet.</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+      
       <div className="ui-controls">
         <div className="score">Score: <span>{score}</span></div>
         <button onClick={throwDice}>Throw the dice</button>
