@@ -60,11 +60,66 @@ canvas {
   top: 20px;
   left: 20px;
   background: var(--color-ui-bg);
-  padding: 15px 25px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 12px 20px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.app-header:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  font-size: 2em;
+  animation: subtle-bounce 3s ease-in-out infinite;
+}
+
+@keyframes subtle-bounce {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-2px); }
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.brand-name {
+  font-size: 1.4em;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+}
+
+[data-theme="dark"] .brand-name {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-subtitle {
+  font-size: 0.9em;
+  font-weight: 500;
+  color: var(--color-text);
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .app-header h1 {
@@ -375,11 +430,23 @@ input:checked + .slider:before {
   .app-header {
     top: 10px;
     left: 10px;
-    padding: 10px 20px;
+    padding: 8px 16px;
   }
   
-  .app-header h1 {
-    font-size: 1.2em;
+  .app-logo {
+    gap: 8px;
+  }
+  
+  .logo-icon {
+    font-size: 1.6em;
+  }
+  
+  .brand-name {
+    font-size: 1.1em;
+  }
+  
+  .brand-subtitle {
+    font-size: 0.75em;
   }
   
   .panel-toggle {
@@ -420,8 +487,20 @@ input:checked + .slider:before {
 }
 
 @media (max-width: 480px) {
-  .app-header h1 {
-    font-size: 1.1em;
+  .app-header {
+    padding: 6px 12px;
+  }
+  
+  .logo-icon {
+    font-size: 1.4em;
+  }
+  
+  .brand-name {
+    font-size: 1em;
+  }
+  
+  .brand-subtitle {
+    font-size: 0.7em;
   }
   
   .panel-toggle {

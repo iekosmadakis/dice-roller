@@ -360,7 +360,13 @@ const DiceRoller = () => {
       
       {/* Header with app name */}
       <div className="app-header">
-        <h1>3D Dice Roller</h1>
+        <div className="app-logo">
+          <div className="logo-icon">🎲</div>
+          <div className="logo-text">
+            <span className="brand-name">3D Dice</span>
+            <span className="brand-subtitle">Roller</span>
+          </div>
+        </div>
       </div>
 
       {/* Panel toggle button */}
