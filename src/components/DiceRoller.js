@@ -369,7 +369,11 @@ const DiceRoller = () => {
         onClick={() => setIsPanelVisible(!isPanelVisible)}
         title={isPanelVisible ? "Hide Settings" : "Show Settings"}
       >
-        {isPanelVisible ? '✕' : '⚙️'}
+        <div className={`hamburger ${isPanelVisible ? 'active' : ''}`}>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
       </button>
 
       {/* Settings panel */}
