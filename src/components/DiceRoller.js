@@ -95,7 +95,8 @@ const DiceRoller = () => {
 
       sceneRef.current = new THREE.Scene();
       cameraRef.current = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, .1, 300);
-      cameraRef.current.position.set(0, .5, 4).multiplyScalar(7);
+      cameraRef.current.position.set(0, 2.0, 3.0).multiplyScalar(7);
+      cameraRef.current.lookAt(0, 0, 0);
 
       updateSceneSize();
 
