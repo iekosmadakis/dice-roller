@@ -8,16 +8,12 @@
   font-size: 16px;
   --color-text: #000;
   --color-bg: #ddd;
-  --color-link: #888;
-  --color-link-hover: #000;
   --color-ui-bg: rgba(255, 255, 255, 0.9);
 }
 
 [data-theme="dark"] {
   --color-text: #fff;
   --color-bg: #1a1a1a;
-  --color-link: #aaa;
-  --color-link-hover: #fff;
   --color-ui-bg: rgba(40, 40, 40, 0.9);
 }
 
@@ -120,14 +116,6 @@ canvas {
   opacity: 0.8;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-}
-
-.app-header h1 {
-  margin: 0;
-  font-size: 1.5em;
-  font-weight: 700;
-  color: var(--color-text);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .panel-toggle {
@@ -274,11 +262,6 @@ canvas {
   color: #2e4cd4;
 }
 
-.score-result {
-  color: #0f2eb8;
-  font-weight: bold;
-}
-
 .ui-controls button {
   background-color: #273e9a;
   font-weight: bold;
@@ -312,13 +295,6 @@ canvas {
 .theme-control {
   padding-top: 6px;
   padding-bottom: 6px;
-}
-
-/* Remove all borders from theme controls */
-.theme-control:first-child,
-.theme-control {
-  border-top: none;
-  border-bottom: none;
 }
 
 .theme-toggle {
@@ -425,7 +401,6 @@ input:checked + .slider:before {
   margin-left: 10px;
 }
 
-/* Responsive design for mobile devices */
 @media (max-width: 768px) {
   .app-header {
     top: 10px;

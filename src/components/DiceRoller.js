@@ -3,18 +3,19 @@ import * as CANNON from 'cannon-es';
 import * as THREE from 'three';
 import { createBoxGeometry, createInnerGeometry } from '../utils/diceGeometry';
 
+const SHAKE_THRESHOLD = 15;
+const SHAKE_COOLDOWN = 2000;
+const STABILITY_DELAY = 500;
+
 const DiceRoller = () => {
   const canvasRef = useRef(null);
   const [score, setScore] = useState('');
   const [numberOfDice, setNumberOfDice] = useState(2);
-  const [isDarkTheme, setIsDarkTheme] = useState(() => {
-    // Get from localStorage, default to false
-    return localStorage.getItem('theme') === 'dark' ? true : false;
-  });
+  const [isDarkTheme, setIsDarkTheme] = useState(() => localStorage.getItem('theme') === 'dark');
   const [keepHistory, setKeepHistory] = useState(false);
   const [history, setHistory] = useState([]);
   const [isPanelVisible, setIsPanelVisible] = useState(true);
-  
+
   const worldRef = useRef(null);
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
@@ -22,24 +23,12 @@ const DiceRoller = () => {
   const diceMeshRef = useRef(null);
   const diceArrayRef = useRef([]);
   const animationRef = useRef(null);
-  const isRollingRef = useRef(false);
   const stabilityTimerRef = useRef(null);
-
-  const params = {
-    segments: 40,
-    edgeRadius: .07,
-    notchRadius: .12,
-    notchDepth: .1,
-    shakeThreshold: 15,
-    shakeCooldown: 2000,
-    stabilityDelay: 500,
-  };
 
   const throwDice = useCallback(() => {
     if (!diceArrayRef.current || diceArrayRef.current.length === 0) return;
     
     setScore('');
-    isRollingRef.current = true;
     
     if (stabilityTimerRef.current) {
       clearTimeout(stabilityTimerRef.current);
@@ -112,12 +101,10 @@ const DiceRoller = () => {
       topLight.shadow.camera.far = 400;
       sceneRef.current.add(topLight);
       
-      // Add front light
       const frontLight = new THREE.DirectionalLight(0xffffff, 1.6);
       frontLight.position.set(0, 5, 10);
       sceneRef.current.add(frontLight);
 
-      // Add side light
       const sideLight = new THREE.DirectionalLight(0xffffff, 1.4);
       sideLight.position.set(10, 5, 0);
       sceneRef.current.add(sideLight);
@@ -235,9 +222,8 @@ const DiceRoller = () => {
         }
         
         stabilityTimerRef.current = setTimeout(() => {
-          isRollingRef.current = false;
           stabilityTimerRef.current = null;
-        }, params.stabilityDelay);
+        }, STABILITY_DELAY);
       });
     };
     
@@ -278,43 +264,37 @@ const DiceRoller = () => {
       animationRef.current = requestAnimationFrame(render);
     };
 
-    const handleDeviceMotion = (event) => {
-      const currentTime = new Date().getTime();
-      let lastShakeTime = 0; 
-      let lastX = 0, lastY = 0, lastZ = 0;
-      
-      if (currentTime - lastShakeTime < params.shakeCooldown) return;
+    let lastShakeTime = 0;
+    let lastX = 0, lastY = 0, lastZ = 0;
 
+    const handleDeviceMotion = (event) => {
       const acceleration = event.accelerationIncludingGravity;
       if (!acceleration) return;
 
+      const now = Date.now();
+      if (now - lastShakeTime < SHAKE_COOLDOWN) return;
+
       const { x, y, z } = acceleration;
-
       const movement = Math.sqrt(
-        Math.pow(x - lastX, 2) +
-        Math.pow(y - lastY, 2) +
-        Math.pow(z - lastZ, 2)
+        (x - lastX) ** 2 + (y - lastY) ** 2 + (z - lastZ) ** 2
       );
-
-      if (movement > params.shakeThreshold) {
-        lastShakeTime = currentTime;
-        throwDice();
-      }
 
       lastX = x;
       lastY = y;
       lastZ = z;
-    };
 
-    const initShakeDetection = () => {
-      if (window.DeviceMotionEvent) {
-        window.addEventListener('devicemotion', handleDeviceMotion);
+      if (movement > SHAKE_THRESHOLD) {
+        lastShakeTime = now;
+        throwDice();
       }
     };
 
     initPhysics();
     initScene();
-    initShakeDetection();
+
+    if (window.DeviceMotionEvent) {
+      window.addEventListener('devicemotion', handleDeviceMotion);
+    }
 
     window.addEventListener('resize', updateSceneSize);
 
@@ -359,7 +339,6 @@ const DiceRoller = () => {
     <div className="dice-roller">
       <canvas ref={canvasRef} id="canvas" />
       
-      {/* Header with app name */}
       <div className="app-header">
         <div className="app-logo">
           <div className="logo-icon">🎲</div>
@@ -370,7 +349,6 @@ const DiceRoller = () => {
         </div>
       </div>
 
-      {/* Panel toggle button */}
       <button 
         className="panel-toggle"
         onClick={() => setIsPanelVisible(!isPanelVisible)}
@@ -383,7 +361,6 @@ const DiceRoller = () => {
         </div>
       </button>
 
-      {/* Settings panel */}
       {isPanelVisible && (
         <div className="dice-selector">
           <div className="selector-row">
@@ -402,27 +379,27 @@ const DiceRoller = () => {
           <div className="theme-control">
             <label className="theme-toggle">
               <span>Dark Theme</span>
-              <label className="switch">
-                <input 
-                  type="checkbox" 
+              <span className="switch">
+                <input
+                  type="checkbox"
                   checked={isDarkTheme}
                   onChange={(e) => setIsDarkTheme(e.target.checked)}
                 />
                 <span className="slider"></span>
-              </label>
+              </span>
             </label>
           </div>
           <div className="theme-control">
             <label className="theme-toggle">
               <span>Keep History</span>
-              <label className="switch">
-                <input 
-                  type="checkbox" 
+              <span className="switch">
+                <input
+                  type="checkbox"
                   checked={keepHistory}
                   onChange={(e) => setKeepHistory(e.target.checked)}
                 />
                 <span className="slider"></span>
-              </label>
+              </span>
             </label>
           </div>
           {keepHistory && (

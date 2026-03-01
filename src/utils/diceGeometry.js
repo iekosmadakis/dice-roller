@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 
-// Params for reference
 const defaultParams = {
   segments: 40,
   edgeRadius: .07,
