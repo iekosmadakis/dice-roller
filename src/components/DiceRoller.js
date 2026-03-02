@@ -3,7 +3,7 @@ import * as CANNON from 'cannon-es';
 import * as THREE from 'three';
 import { createBoxGeometry, createInnerGeometry } from '../utils/diceGeometry';
 
-const SHAKE_THRESHOLD = 12;
+const SHAKE_THRESHOLD = 10;
 const SHAKE_COOLDOWN = 2000;
 const STABILITY_DELAY = 500;
 
