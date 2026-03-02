@@ -271,9 +271,6 @@ const DiceRoller = () => {
       const acceleration = event.accelerationIncludingGravity;
       if (!acceleration) return;
 
-      const now = Date.now();
-      if (now - lastShakeTime < SHAKE_COOLDOWN) return;
-
       const { x, y, z } = acceleration;
       const movement = Math.sqrt(
         (x - lastX) ** 2 + (y - lastY) ** 2 + (z - lastZ) ** 2
@@ -283,7 +280,8 @@ const DiceRoller = () => {
       lastY = y;
       lastZ = z;
 
-      if (movement > SHAKE_THRESHOLD) {
+      const now = Date.now();
+      if (movement > SHAKE_THRESHOLD && now - lastShakeTime >= SHAKE_COOLDOWN) {
         lastShakeTime = now;
         throwDice();
       }
